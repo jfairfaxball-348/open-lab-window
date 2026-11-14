@@ -91,6 +91,8 @@ table.grid { border-collapse: collapse; width: 100%; background: var(--panel); b
 .t-tool-call, .t-tool-result { border-left-color: var(--ok); }
 .t-error, .t-supervisor-action { border-left-color: var(--bad); }
 .t-run-state-changed { border-left-color: var(--muted); }
+.t-environment-message { border-left-color: var(--derived); }
+.told { border-left: 3px solid var(--derived); font-family: inherit; font-size: 14px; }
 
 /* An agent's claim must never be mistaken for an observation: its own
    colour, a hatched edge and a heavier border, not just a small badge. */

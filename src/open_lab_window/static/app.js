@@ -265,6 +265,13 @@ function eventBody(event) {
     case "agent.output":
       return h("div", {}, h("div", { class: "label" }, "Model output, verbatim", p.truncated ? " (truncated by the recorder)" : ""),
         p.text ? h("pre", { class: "said" }, p.text) : h("span", { class: "muted" }, "(empty text; see any tool calls that follow)"));
+    case "environment.message":
+      return h("div", {}, h("div", { class: "label" },
+        p.kind === "continuation"
+          ? "Said to the model by the runtime, because its reply contained no tool call"
+          : `Said to the model by the runtime (${p.kind})`,
+        typeof p.after_seq === "number" ? ` · answers event ${p.after_seq}` : ""),
+        h("pre", { class: "told" }, p.text ?? ""));
     case "agent.statement":
       return h("div", {}, h("div", { class: "label" }, `Stated ${p.kind || "statement"} — said by the model, not verified`,
         typeof p.source_seq === "number" ? ` · from event ${p.source_seq}` : ""),

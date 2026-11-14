@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 from conftest import MODEL_CHECK, PNG, SMOKE, run_url
 
@@ -295,3 +296,19 @@ def test_front_end_never_builds_html_from_archive_text():
     assert script.count("replaceChildren") == 1 and "createTextNode" in script
     page = (server._STATIC_DIR / "index.html").read_text(encoding="utf-8")
     assert "http://" not in page and "https://" not in page
+
+
+def test_environment_messages_are_served_as_recorded(client, writer):
+    run = writer()
+    run.start()
+    run.event("agent.output", {"text": "Just thinking."}, recorder="agent_runtime")
+    run.event("environment.message", {"kind": "continuation", "text": "No one has replied.",
+                                      "after_seq": 2}, recorder="agent_runtime",
+              actor={"kind": "system"})
+    base = run_url((run.experiment_id, run.run_id))
+    page = client.json(base + "/events?types=environment.message")
+    assert [(e["type"], e["payload"]["text"]) for e in page["events"]] == [
+        ("environment.message", "No one has replied.")]
+    assert page["events"][0]["epistemic_status"] == "observed"
+    script = (Path(__file__).parent.parent / "src" / "open_lab_window" / "static" / "app.js")
+    assert 'case "environment.message"' in script.read_text(encoding="utf-8")

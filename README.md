@@ -24,6 +24,9 @@ schemas and a data directory, never code.
 - **Timeline**: events in recorded order, paginated, with type filters. Each
   event shows its `epistemic_status`; an `agent_claim` is drawn differently
   from an `observed` event (own colour, dashed border, label).
+  Text the runtime itself gave the model (an `environment.message`, such as
+  the continuation sent after a reply without a tool call) is labelled as
+  coming from the runtime, not the model.
 - **Tool calls**: each `tool.call` beside the `tool.result` with the same
   correlation id, or a note that no result was recorded.
 - **Artifacts**: every observed version of every file, with a text preview
