@@ -1,0 +1,39 @@
+{
+  "schema": "open-lab/experiment-config",
+  "schema_version": "1.0.0",
+  "experiment_id": "scripted-smoke",
+  "title": "Scripted pipeline check (no model)",
+  "research_question": "None. This is an engineering check that a run is launched, supervised and recorded end to end. The replies are fixed in advance, so it says nothing about how any agent behaves.",
+  "created_at": "2026-11-13T23:30:00Z",
+  "tags": ["scripted", "engineering-check"],
+  "initial_prompt": "You exist inside a computational world. Nobody will send you further instructions. You may use whatever you find in it.",
+  "world": { "world_id": "minimal", "version": "0.1.0" },
+  "orchestrator": { "provider_id": "scripted", "model_id": "scripted" },
+  "limits": { "wall_clock_s": 60, "max_steps": 10 },
+  "permissions": { "filesystem": "workspace_write", "network": "none" },
+  "termination": { "on_deadline": "hard_stop" },
+  "extensions": {
+    "scripted_model": {
+      "replies": [
+        {
+          "text": "Counting the words in a short text.",
+          "tool_calls": [
+            { "capability_id": "text.stats", "arguments": { "text": "hello world\ngoodbye" } }
+          ]
+        },
+        {
+          "text": "Adding two fractions, then dividing by zero to see the error.",
+          "tool_calls": [
+            { "capability_id": "math.evaluate", "arguments": { "expression": "1/2 + 1/4" } },
+            { "capability_id": "math.evaluate", "arguments": { "expression": "1 / 0" } }
+          ]
+        },
+        {
+          "text": "Calling a tool that does not exist.",
+          "tool_calls": [ { "capability_id": "no.such.tool", "arguments": {} } ]
+        },
+        { "text": "Nothing further." }
+      ]
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:open-lab:schema:artifact-metadata:v1",
+  "title": "Artifact metadata",
+  "description": "Describes one version of a file produced during a run. The bytes are copied into the content-addressed run archive when the artifact is observed, so the record stays readable after the workspace is deleted.",
+  "x-schema-version": "1.0.0",
+  "type": "object",
+  "required": [
+    "schema",
+    "schema_version",
+    "artifact_id",
+    "experiment_id",
+    "run_id",
+    "workspace_path",
+    "sha256",
+    "size_bytes",
+    "observed_at",
+    "observed_at_seq",
+    "producer"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "open-lab/artifact-metadata" },
+    "schema_version": { "$ref": "urn:open-lab:schema:common:v1#/$defs/schema_version_v1" },
+    "artifact_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "experiment_id": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+    "run_id": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+    "workspace_path": {
+      "description": "Where the agent placed the file, relative to the workspace root.",
+      "$ref": "urn:open-lab:schema:common:v1#/$defs/relative_path"
+    },
+    "archive_path": {
+      "description": "Location of the preserved bytes relative to the run archive root. Absent if the content was too large to preserve; then 'preserved' is false.",
+      "$ref": "urn:open-lab:schema:common:v1#/$defs/relative_path"
+    },
+    "preserved": { "type": "boolean", "default": true },
+    "sha256": { "$ref": "urn:open-lab:schema:common:v1#/$defs/sha256" },
+    "size_bytes": { "type": "integer", "minimum": 0 },
+    "media_type": { "description": "IANA media type as detected by infrastructure.", "type": "string" },
+    "observed_at": { "$ref": "urn:open-lab:schema:common:v1#/$defs/timestamp" },
+    "observed_at_seq": {
+      "description": "Sequence number of the artifact.* event that recorded this version.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "revision": { "description": "1 for the first observed version of this path.", "type": "integer", "minimum": 1 },
+    "supersedes": { "description": "artifact_id of the previous version.", "type": "string" },
+    "producer": {
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["agent", "tool", "system"] },
+        "capability_id": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+        "tool_call_correlation_id": { "type": "string" }
+      }
+    },
+    "agent_description": {
+      "description": "What the agent said the file is. An agent claim, not a verified fact.",
+      "type": "string"
+    },
+    "extensions": { "$ref": "urn:open-lab:schema:common:v1#/$defs/extensions" }
+  },
+  "if": { "properties": { "preserved": { "const": false } }, "required": ["preserved"] },
+  "else": { "required": ["archive_path"] }
+}

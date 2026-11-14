@@ -1,0 +1,27 @@
+{
+  "kind": "openai_chat",
+  "model_id": "orchestrator-small",
+  "provider_id": "ollama-local",
+  "real_model": true,
+  "base_url": "http://127.0.0.1:11434/v1",
+  "provider_ref": "llama3.2:3b",
+  "sampling": {
+    "temperature": 0,
+    "seed": 1,
+    "max_output_tokens": 512
+  },
+  "identity": {
+    "provider_ref": "llama3.2:3b",
+    "digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+    "size": 2019393189,
+    "modified_at": "2026-11-13T23:41:15.740751Z",
+    "details": {
+      "family": "llama",
+      "parameter_size": "3.2B",
+      "quantization_level": "Q4_K_M",
+      "format": "gguf"
+    },
+    "server_version": "0.40.16"
+  },
+  "context_tokens": 4096
+}

@@ -1,0 +1,31 @@
+{
+  "experiment_id": "local-model-check",
+  "run_id": "run-20261114t024819z-09ad2e",
+  "final_state": "completed",
+  "reason": "the model made no tool call",
+  "started_at": "2026-11-14T02:48:19.853Z",
+  "ended_at": "2026-11-14T02:48:22.273Z",
+  "event_count": 12,
+  "events_by_type": {
+    "agent.output": 2,
+    "model.call": 2,
+    "run.state_changed": 4,
+    "tool.call": 2,
+    "tool.result": 2
+  },
+  "artifact_versions": 0,
+  "last_event_sha256": "be9110f9db4d6cfc4d624f218b2978a41c792bb5bbc6ed6407525921ce305b9e",
+  "world": {
+    "world_id": "minimal",
+    "version": "0.2.0",
+    "content_digest": "d4d126d780861be4a57754d255134ac43a0da6a5dc63b9b459662330218ec763"
+  },
+  "model": {
+    "model_id": "orchestrator-small",
+    "real_model": true,
+    "provider_id": "ollama-local",
+    "provider_ref": "llama3.2:3b",
+    "digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72"
+  },
+  "simulation_version": "0.1.0"
+}

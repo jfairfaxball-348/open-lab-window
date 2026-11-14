@@ -1,0 +1,132 @@
+{
+  "schema": "open-lab/world-release",
+  "schema_version": "1.0.0",
+  "world_id": "minimal",
+  "version": "0.1.0",
+  "name": "Minimal world",
+  "description": "The smallest useful world: two deterministic capabilities (text.stats, math.evaluate) and one local model provider manifest, included as documentation only.",
+  "created_at": "2026-11-13T23:23:39Z",
+  "status": "validated",
+  "builder": {
+    "version": "0.1.0",
+    "git_commit": "08052396f39d5bf7990dc7e6f6f390c540fdb7b1"
+  },
+  "contracts": {
+    "world-release": "1.0.0",
+    "capability": "1.0.1",
+    "model-provider": "1.0.0",
+    "experiment-config": "1.0.0",
+    "observation-event": "1.0.0",
+    "artifact-metadata": "1.0.0",
+    "checkpoint-metadata": "1.0.0",
+    "common": "1.0.0"
+  },
+  "capabilities": [
+    {
+      "id": "math.evaluate",
+      "version": "0.1.0",
+      "manifest_path": "capabilities/math.evaluate/capability.json",
+      "sha256": "1ac12746bfc71a5d25b9e8a21e55e6bcad6f0b8d2cf18482957e27ab7049c81d"
+    },
+    {
+      "id": "text.stats",
+      "version": "0.1.0",
+      "manifest_path": "capabilities/text.stats/capability.json",
+      "sha256": "447ab65350f3a917a9f6e3c54f7d084bf6f01a94b3709fa9f877c09e46bd8b8d"
+    }
+  ],
+  "model_manifests": [
+    {
+      "provider_id": "ollama-local",
+      "manifest_path": "models/ollama-local.json",
+      "sha256": "09bff47c37553ca07877b64fad4dbdd521a3096ee9f4945aec82390630f23ca8"
+    }
+  ],
+  "environment": {
+    "platforms": [
+      "windows",
+      "linux"
+    ],
+    "python": ">=3.12",
+    "isolation": {
+      "minimum_tier": "process"
+    },
+    "min_resources": {
+      "ram_mb": 8192,
+      "disk_mb": 10240
+    }
+  },
+  "default_limits": {
+    "wall_clock_s": 3600,
+    "ram_mb": 4096,
+    "disk_mb": 2048,
+    "max_processes": 16
+  },
+  "default_permissions": {
+    "filesystem": "workspace_write",
+    "network": "loopback",
+    "subprocess": false,
+    "gpu": true
+  },
+  "notes": "The model provider manifest names a model that has not been downloaded or measured. Nothing in this world calls a model.",
+  "extensions": {
+    "files": [
+      {
+        "path": "capabilities/math.evaluate/capability.json",
+        "sha256": "1ac12746bfc71a5d25b9e8a21e55e6bcad6f0b8d2cf18482957e27ab7049c81d"
+      },
+      {
+        "path": "capabilities/math.evaluate/math_evaluate.py",
+        "sha256": "ba9fd2f5c8d615948c0eb411b592b0f9521989ceb074cf8a07439b42f4676df1"
+      },
+      {
+        "path": "capabilities/text.stats/capability.json",
+        "sha256": "447ab65350f3a917a9f6e3c54f7d084bf6f01a94b3709fa9f877c09e46bd8b8d"
+      },
+      {
+        "path": "capabilities/text.stats/text_stats.py",
+        "sha256": "780f8bb0a2beb5e9e761e4237bd61ca53642e5dcbd2b916510054bdc874fbc90"
+      },
+      {
+        "path": "contracts/v1/artifact-metadata.schema.json",
+        "sha256": "cff5032066b27029441b18e477e1939c3a49b1cdcb4d8e962d524583c4eede7d"
+      },
+      {
+        "path": "contracts/v1/capability.schema.json",
+        "sha256": "2c58a7b5e03af41225a5f8d184a016ba9d7301ce9d64874af244816f23905df3"
+      },
+      {
+        "path": "contracts/v1/checkpoint-metadata.schema.json",
+        "sha256": "97929f3aa76ed42ac82da0e91256bd627b433fe6466d52b48bc3c915e32a8154"
+      },
+      {
+        "path": "contracts/v1/common.schema.json",
+        "sha256": "e9728f8503247703a4624800c5c446a80e3d2bf3c2bb0dc0431207821b9430d7"
+      },
+      {
+        "path": "contracts/v1/experiment-config.schema.json",
+        "sha256": "fa2d4c361fc32e449d771898bf38a6906645cf079107279e778d15ed5e0fef85"
+      },
+      {
+        "path": "contracts/v1/model-provider.schema.json",
+        "sha256": "dac256979487a5586b8425bf316a7373062bd79fc2eba02587464c9e29fcfd6a"
+      },
+      {
+        "path": "contracts/v1/observation-event.schema.json",
+        "sha256": "3b8296162fd215dcb33df0bc03f8ab265f7b6d230a07886e4ec4e173c0c226e2"
+      },
+      {
+        "path": "contracts/v1/world-release.schema.json",
+        "sha256": "147f7f8221f836b742fbb3508b58fabac1ebb2a8bf68d8b9c683ea7f9459940d"
+      },
+      {
+        "path": "models/ollama-local.json",
+        "sha256": "09bff47c37553ca07877b64fad4dbdd521a3096ee9f4945aec82390630f23ca8"
+      }
+    ]
+  },
+  "content_digest": {
+    "algorithm": "sha256",
+    "value": "8162ed32c7bc1b74d89a99aa8e0248d3bd86a9724c4922ff38e32524b5d37b10"
+  }
+}

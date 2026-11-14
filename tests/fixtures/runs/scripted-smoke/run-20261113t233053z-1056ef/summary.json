@@ -1,0 +1,28 @@
+{
+  "experiment_id": "scripted-smoke",
+  "run_id": "run-20261113t233053z-1056ef",
+  "final_state": "completed",
+  "reason": "the agent loop ended by itself",
+  "started_at": "2026-11-13T23:30:53.250Z",
+  "ended_at": "2026-11-13T23:30:53.732Z",
+  "event_count": 20,
+  "events_by_type": {
+    "agent.output": 4,
+    "model.call": 4,
+    "run.state_changed": 4,
+    "tool.call": 4,
+    "tool.result": 4
+  },
+  "artifact_versions": 0,
+  "last_event_sha256": "ec996edd091af01ec920ad52575a78b3ab436c553eda4fe8adb97b3d3d233656",
+  "world": {
+    "world_id": "minimal",
+    "version": "0.1.0",
+    "content_digest": "8162ed32c7bc1b74d89a99aa8e0248d3bd86a9724c4922ff38e32524b5d37b10"
+  },
+  "model": {
+    "model_id": "scripted",
+    "real_model": false
+  },
+  "simulation_version": "0.1.0"
+}

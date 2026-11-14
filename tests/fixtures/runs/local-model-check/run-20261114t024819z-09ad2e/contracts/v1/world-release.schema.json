@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:open-lab:schema:world-release:v1",
+  "title": "World release manifest",
+  "description": "Describes one immutable, versioned world that the Simulation can instantiate. Produced only by the World Builder.",
+  "x-schema-version": "1.0.0",
+  "type": "object",
+  "required": [
+    "schema",
+    "schema_version",
+    "world_id",
+    "version",
+    "name",
+    "description",
+    "created_at",
+    "status",
+    "builder",
+    "contracts",
+    "capabilities",
+    "model_manifests",
+    "environment",
+    "default_limits",
+    "default_permissions"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "open-lab/world-release" },
+    "schema_version": { "$ref": "urn:open-lab:schema:common:v1#/$defs/schema_version_v1" },
+    "world_id": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+    "version": { "$ref": "urn:open-lab:schema:common:v1#/$defs/semver" },
+    "name": { "type": "string", "minLength": 1 },
+    "description": { "type": "string", "minLength": 1 },
+    "created_at": { "$ref": "urn:open-lab:schema:common:v1#/$defs/timestamp" },
+    "status": {
+      "description": "'draft' releases must not be used for recorded experiments. 'validated' means every capability self-test passed at build time.",
+      "enum": ["draft", "validated", "released", "deprecated"]
+    },
+    "builder": {
+      "description": "Provenance of the tool that produced this release.",
+      "type": "object",
+      "required": ["version"],
+      "additionalProperties": false,
+      "properties": {
+        "version": { "$ref": "urn:open-lab:schema:common:v1#/$defs/semver" },
+        "git_commit": { "type": "string", "pattern": "^[a-f0-9]{7,40}$" }
+      }
+    },
+    "contracts": {
+      "description": "Contract name to contract version bundled with this release. The Simulation validates against exactly these versions.",
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+      "additionalProperties": { "$ref": "urn:open-lab:schema:common:v1#/$defs/semver" }
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "version", "manifest_path", "sha256"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+          "version": { "$ref": "urn:open-lab:schema:common:v1#/$defs/semver" },
+          "manifest_path": {
+            "description": "Path of the capability manifest inside the release.",
+            "$ref": "urn:open-lab:schema:common:v1#/$defs/relative_path"
+          },
+          "sha256": { "$ref": "urn:open-lab:schema:common:v1#/$defs/sha256" }
+        }
+      }
+    },
+    "model_manifests": {
+      "description": "Model provider manifests the world was built against. Models are referenced, never embedded.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["provider_id", "manifest_path", "sha256"],
+        "additionalProperties": false,
+        "properties": {
+          "provider_id": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+          "manifest_path": { "$ref": "urn:open-lab:schema:common:v1#/$defs/relative_path" },
+          "sha256": { "$ref": "urn:open-lab:schema:common:v1#/$defs/sha256" }
+        }
+      }
+    },
+    "environment": {
+      "description": "What the host must provide for this world to run.",
+      "type": "object",
+      "required": ["platforms", "isolation"],
+      "additionalProperties": false,
+      "properties": {
+        "platforms": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "enum": ["windows", "linux", "macos"] },
+          "uniqueItems": true
+        },
+        "python": { "description": "PEP 440 version specifier.", "type": "string" },
+        "isolation": {
+          "type": "object",
+          "required": ["minimum_tier"],
+          "additionalProperties": false,
+          "properties": {
+            "minimum_tier": {
+              "description": "'process': supervised OS processes with mediated tools only. 'container': OS-level sandbox, required for agent-authored code.",
+              "enum": ["process", "container"]
+            }
+          }
+        },
+        "min_resources": { "$ref": "urn:open-lab:schema:common:v1#/$defs/resource_limits" }
+      }
+    },
+    "default_limits": { "$ref": "urn:open-lab:schema:common:v1#/$defs/resource_limits" },
+    "default_permissions": { "$ref": "urn:open-lab:schema:common:v1#/$defs/permissions" },
+    "content_digest": {
+      "description": "Digest over the sorted list of bundled file digests. Absent only while status is 'draft'.",
+      "type": "object",
+      "required": ["algorithm", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": { "const": "sha256" },
+        "value": { "$ref": "urn:open-lab:schema:common:v1#/$defs/sha256" }
+      }
+    },
+    "notes": { "type": "string" },
+    "extensions": { "$ref": "urn:open-lab:schema:common:v1#/$defs/extensions" }
+  },
+  "if": { "properties": { "status": { "enum": ["validated", "released"] } } },
+  "then": { "required": ["content_digest"] }
+}

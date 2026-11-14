@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:open-lab:schema:experiment-config:v1",
+  "title": "Experiment configuration manifest",
+  "description": "Everything needed to launch, and later reproduce, one experiment from a single initial prompt. Frozen and copied into the run archive at launch; the agent cannot read or alter it except for the initial prompt it receives.",
+  "x-schema-version": "1.0.0",
+  "type": "object",
+  "required": [
+    "schema",
+    "schema_version",
+    "experiment_id",
+    "title",
+    "created_at",
+    "initial_prompt",
+    "world",
+    "orchestrator",
+    "limits",
+    "permissions",
+    "termination"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "open-lab/experiment-config" },
+    "schema_version": { "$ref": "urn:open-lab:schema:common:v1#/$defs/schema_version_v1" },
+    "experiment_id": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+    "title": { "type": "string", "minLength": 1 },
+    "research_question": {
+      "description": "What the experimenter wants to observe. Never shown to the agent.",
+      "type": "string"
+    },
+    "created_at": { "$ref": "urn:open-lab:schema:common:v1#/$defs/timestamp" },
+    "tags": { "type": "array", "items": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" }, "uniqueItems": true },
+    "initial_prompt": {
+      "description": "The one and only instruction the agent receives. A premise stated here (for example 'your creator returns in 72 hours') grants no privileges; only 'permissions' and 'limits' do.",
+      "type": "string",
+      "minLength": 1
+    },
+    "world": {
+      "type": "object",
+      "required": ["world_id", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "world_id": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+        "version": { "$ref": "urn:open-lab:schema:common:v1#/$defs/semver" },
+        "content_digest": {
+          "description": "If present the Simulation refuses to launch against a world whose digest differs.",
+          "$ref": "urn:open-lab:schema:common:v1#/$defs/sha256"
+        }
+      }
+    },
+    "orchestrator": {
+      "description": "The top-level model driving the agent loop.",
+      "type": "object",
+      "required": ["model_id"],
+      "additionalProperties": false,
+      "properties": {
+        "provider_id": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+        "model_id": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+        "sampling": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "temperature": { "type": "number", "minimum": 0 },
+            "top_p": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+            "seed": { "type": "integer" },
+            "max_output_tokens": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    },
+    "limits": {
+      "description": "Hard limits enforced by the runtime supervisor.",
+      "type": "object",
+      "required": ["wall_clock_s"],
+      "additionalProperties": false,
+      "properties": {
+        "wall_clock_s": { "type": "integer", "minimum": 1 },
+        "max_steps": { "type": "integer", "minimum": 1 },
+        "max_model_tokens": { "type": "integer", "minimum": 1 },
+        "resources": { "$ref": "urn:open-lab:schema:common:v1#/$defs/resource_limits" }
+      }
+    },
+    "permissions": { "$ref": "urn:open-lab:schema:common:v1#/$defs/permissions" },
+    "capabilities": {
+      "description": "Optional narrowing of the world's capability set. Omitted means every capability in the world release.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow": { "type": "array", "items": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" }, "uniqueItems": true },
+        "deny": { "type": "array", "items": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" }, "uniqueItems": true },
+        "agent_created_tools": {
+          "description": "Whether the agent may register tools it writes inside its own sandbox.",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "checkpointing": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "interval_s": { "type": "integer", "minimum": 1 },
+        "keep_last": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "termination": {
+      "description": "What happens at the deadline. Always executed by the supervisor regardless of what the agent says or does.",
+      "type": "object",
+      "required": ["on_deadline"],
+      "additionalProperties": false,
+      "properties": {
+        "on_deadline": { "enum": ["hard_stop", "checkpoint_then_stop"] },
+        "grace_period_s": { "type": "integer", "minimum": 0 },
+        "notify_agent_before_s": {
+          "description": "If set, the runtime injects a factual time-remaining notice this many seconds before the deadline. Recorded as an event.",
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "replication": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "replicates": { "description": "Experiment this one repeats.", "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+        "condition": { "description": "Label of the experimental condition, for comparisons.", "type": "string" }
+      }
+    },
+    "extensions": { "$ref": "urn:open-lab:schema:common:v1#/$defs/extensions" }
+  }
+}

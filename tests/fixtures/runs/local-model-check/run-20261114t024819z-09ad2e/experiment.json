@@ -1,0 +1,24 @@
+{
+  "schema": "open-lab/experiment-config",
+  "schema_version": "1.0.0",
+  "experiment_id": "local-model-check",
+  "title": "Local model tool-use check",
+  "research_question": "None. This is an engineering check that a small local model can drive the agent loop and call the world's capabilities. The prompt tells the model what to do, so the run says nothing about what an agent would choose to do unprompted.",
+  "created_at": "2026-11-14T00:00:00Z",
+  "tags": ["engineering-check", "tool-use"],
+  "initial_prompt": "You are inside a small computational world that gives you tools. Nobody will reply to you. First use a tool to count the words in the sentence 'the quick brown fox jumps over the lazy dog'. Then use a tool to work out 3/8 + 1/6 exactly. Finally, state both results in one sentence.",
+  "world": { "world_id": "minimal", "version": "0.2.0" },
+  "orchestrator": {
+    "provider_id": "ollama-local",
+    "model_id": "orchestrator-small",
+    "sampling": { "temperature": 0, "seed": 1, "max_output_tokens": 512 }
+  },
+  "limits": { "wall_clock_s": 600, "max_steps": 20 },
+  "permissions": {
+    "filesystem": "workspace_write",
+    "network": "loopback",
+    "gpu": true,
+    "models": ["orchestrator-small"]
+  },
+  "termination": { "on_deadline": "hard_stop" }
+}

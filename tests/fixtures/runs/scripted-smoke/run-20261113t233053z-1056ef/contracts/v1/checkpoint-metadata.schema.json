@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:open-lab:schema:checkpoint-metadata:v1",
+  "title": "Agent checkpoint metadata",
+  "description": "Index record for one resumable snapshot of a run. Checkpoints are taken and stored by the supervisor outside the agent's workspace.",
+  "x-schema-version": "1.0.0",
+  "type": "object",
+  "required": [
+    "schema",
+    "schema_version",
+    "checkpoint_id",
+    "experiment_id",
+    "run_id",
+    "created_at",
+    "reason",
+    "last_event_seq",
+    "progress",
+    "world",
+    "orchestrator_model_id",
+    "components"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "open-lab/checkpoint-metadata" },
+    "schema_version": { "$ref": "urn:open-lab:schema:common:v1#/$defs/schema_version_v1" },
+    "checkpoint_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "experiment_id": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+    "run_id": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+    "created_at": { "$ref": "urn:open-lab:schema:common:v1#/$defs/timestamp" },
+    "reason": { "enum": ["interval", "pre_shutdown", "pre_recovery", "operator_request"] },
+    "last_event_seq": {
+      "description": "Highest event sequence number reflected in this snapshot. Resuming continues from last_event_seq + 1.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "parent_checkpoint_id": { "type": "string" },
+    "progress": {
+      "type": "object",
+      "required": ["elapsed_s", "step_count"],
+      "additionalProperties": false,
+      "properties": {
+        "elapsed_s": {
+          "description": "Active run time consumed so far; downtime between crash and recovery is excluded.",
+          "type": "number",
+          "minimum": 0
+        },
+        "step_count": { "type": "integer", "minimum": 0 },
+        "model_tokens_used": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "world": {
+      "type": "object",
+      "required": ["world_id", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "world_id": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+        "version": { "$ref": "urn:open-lab:schema:common:v1#/$defs/semver" }
+      }
+    },
+    "orchestrator_model_id": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+    "components": {
+      "description": "The pieces that together restore the run.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "path", "sha256", "size_bytes"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "enum": ["conversation", "memory", "workspace", "runtime_state"] },
+          "path": {
+            "description": "Relative to the checkpoint directory in the run archive.",
+            "$ref": "urn:open-lab:schema:common:v1#/$defs/relative_path"
+          },
+          "sha256": { "$ref": "urn:open-lab:schema:common:v1#/$defs/sha256" },
+          "size_bytes": { "type": "integer", "minimum": 0 },
+          "format": { "type": "string" }
+        }
+      }
+    },
+    "resumable": {
+      "description": "False if verification of the snapshot failed; kept for forensics only.",
+      "type": "boolean",
+      "default": true
+    },
+    "extensions": { "$ref": "urn:open-lab:schema:common:v1#/$defs/extensions" }
+  }
+}

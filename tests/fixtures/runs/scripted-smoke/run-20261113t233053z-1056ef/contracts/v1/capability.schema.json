@@ -1,0 +1,246 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:open-lab:schema:capability:v1",
+  "title": "Capability manifest",
+  "description": "Self-describing definition of one tool an agent can discover, learn and invoke. Transport-neutral: the same manifest can be projected as an MCP tool, an OpenAI-style function or a plain subprocess call.",
+  "x-schema-version": "1.0.1",
+  "type": "object",
+  "required": [
+    "schema",
+    "schema_version",
+    "id",
+    "version",
+    "name",
+    "summary",
+    "description",
+    "categories",
+    "invocation",
+    "input_schema",
+    "output_schema",
+    "permissions",
+    "demonstrations",
+    "self_test",
+    "limitations",
+    "failure_modes",
+    "provenance"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "open-lab/capability" },
+    "schema_version": { "$ref": "urn:open-lab:schema:common:v1#/$defs/schema_version_v1" },
+    "id": {
+      "description": "Stable identifier, conventionally '<category>.<name>'.",
+      "$ref": "urn:open-lab:schema:common:v1#/$defs/slug"
+    },
+    "version": { "$ref": "urn:open-lab:schema:common:v1#/$defs/semver" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "summary": {
+      "description": "One sentence shown in search results. Written for an agent that has never seen this tool.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "description": {
+      "description": "Full usage documentation: what it does, when to use it, how to read the result.",
+      "type": "string",
+      "minLength": 1
+    },
+    "categories": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+      "uniqueItems": true
+    },
+    "keywords": {
+      "description": "Additional search terms.",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "invocation": {
+      "description": "How the tool host executes the capability. Arguments always validate against input_schema and results against output_schema, regardless of interface.",
+      "oneOf": [
+        {
+          "title": "Python callable",
+          "type": "object",
+          "required": ["interface", "entrypoint"],
+          "additionalProperties": false,
+          "properties": {
+            "interface": { "const": "python" },
+            "entrypoint": {
+              "description": "'module:function'. The module is a file inside the capability's own directory (dots separate sub-directories); it is not looked up on the Python import path. The function is called with the argument object and returns the result object. Raising ValueError reports an error to the caller.",
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_.]*:[A-Za-z_][A-Za-z0-9_]*$"
+            }
+          }
+        },
+        {
+          "title": "Subprocess",
+          "type": "object",
+          "required": ["interface", "command"],
+          "additionalProperties": false,
+          "properties": {
+            "interface": { "const": "subprocess" },
+            "command": {
+              "description": "Argument vector, run with the capability's own directory as the working directory and never passed through a shell. A first element of exactly 'python' means the host's own Python interpreter. The process reads the argument object as JSON on stdin and exits 0 with the result object as JSON on stdout; a non-zero exit with {\"error\": \"message\"} on stdout reports an error to the caller.",
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string" }
+            },
+            "input_mode": { "enum": ["json_stdin"], "default": "json_stdin" },
+            "output_mode": { "enum": ["json_stdout"], "default": "json_stdout" }
+          }
+        },
+        {
+          "title": "Local HTTP endpoint",
+          "type": "object",
+          "required": ["interface", "method", "url"],
+          "additionalProperties": false,
+          "properties": {
+            "interface": { "const": "http" },
+            "method": { "enum": ["GET", "POST"] },
+            "url": { "type": "string", "pattern": "^https?://" }
+          }
+        },
+        {
+          "title": "Tool on an MCP server",
+          "type": "object",
+          "required": ["interface", "server", "tool"],
+          "additionalProperties": false,
+          "properties": {
+            "interface": { "const": "mcp" },
+            "server": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+            "tool": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "input_schema": {
+      "description": "JSON Schema (draft 2020-12) for the argument object.",
+      "type": "object",
+      "required": ["type"],
+      "properties": { "type": { "const": "object" } }
+    },
+    "output_schema": {
+      "description": "JSON Schema (draft 2020-12) for the result object.",
+      "type": "object",
+      "required": ["type"],
+      "properties": { "type": { "const": "object" } }
+    },
+    "permissions": { "$ref": "urn:open-lab:schema:common:v1#/$defs/permissions" },
+    "resources": {
+      "description": "What one invocation needs. Used by the supervisor and model gateway for scheduling.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "timeout_s": { "type": "integer", "minimum": 1 },
+        "typical_duration_s": { "type": "number", "minimum": 0 },
+        "ram_mb": { "type": "integer", "minimum": 0 },
+        "vram_mb": { "type": "integer", "minimum": 0 },
+        "exclusive_gpu": {
+          "description": "True if other GPU-resident models must be unloaded first.",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "capabilities": {
+          "type": "array",
+          "items": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+          "uniqueItems": true
+        },
+        "models": {
+          "type": "array",
+          "items": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+          "uniqueItems": true
+        },
+        "executables": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "python_packages": {
+          "description": "PEP 508 requirement strings.",
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      }
+    },
+    "demonstrations": {
+      "description": "Worked examples an agent can read and re-run. Each input must validate against input_schema; expected_output, when given, must validate against output_schema.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "input"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+          "title": { "type": "string", "minLength": 1 },
+          "explanation": { "type": "string" },
+          "input": { "type": "object" },
+          "expected_output": {
+            "description": "Exact expected result. Omit for non-deterministic capabilities.",
+            "type": "object"
+          },
+          "deterministic": { "type": "boolean", "default": true }
+        }
+      }
+    },
+    "self_test": {
+      "description": "How the builder (at release time) and the agent (at any time) confirm the capability works.",
+      "type": "object",
+      "required": ["demonstrations"],
+      "additionalProperties": false,
+      "properties": {
+        "demonstrations": {
+          "description": "Ids of demonstrations that are run and compared with their expected_output (or only schema-checked if non-deterministic).",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+          "uniqueItems": true
+        },
+        "timeout_s": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "limitations": {
+      "description": "Known limits, stated plainly. May be empty but must be present.",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "failure_modes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["condition", "symptom"],
+        "additionalProperties": false,
+        "properties": {
+          "condition": { "type": "string", "minLength": 1 },
+          "symptom": { "type": "string", "minLength": 1 },
+          "recovery": { "type": "string" }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["origin"],
+      "additionalProperties": false,
+      "properties": {
+        "origin": {
+          "description": "'builder' capabilities ship with a world release. 'agent' capabilities were created inside an experiment sandbox and never leave it.",
+          "enum": ["builder", "agent"]
+        },
+        "created_in_run": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" }
+      },
+      "if": { "properties": { "origin": { "const": "agent" } } },
+      "then": { "required": ["created_in_run"] }
+    },
+    "stability": { "enum": ["experimental", "stable", "deprecated"], "default": "experimental" },
+    "extensions": { "$ref": "urn:open-lab:schema:common:v1#/$defs/extensions" }
+  }
+}

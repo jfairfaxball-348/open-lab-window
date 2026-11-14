@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:open-lab:schema:model-provider:v1",
+  "title": "Model provider and model capability manifest",
+  "description": "Describes one model-serving backend and the models it offers, so the model gateway can route requests and schedule memory without knowing the backend's native API.",
+  "x-schema-version": "1.0.0",
+  "type": "object",
+  "required": ["schema", "schema_version", "provider", "models"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "open-lab/model-provider" },
+    "schema_version": { "$ref": "urn:open-lab:schema:common:v1#/$defs/schema_version_v1" },
+    "provider": {
+      "type": "object",
+      "required": ["id", "kind", "locality", "api"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "urn:open-lab:schema:common:v1#/$defs/slug" },
+        "name": { "type": "string" },
+        "kind": {
+          "description": "Serving software. 'other' requires a gateway adapter documented in the world release.",
+          "enum": ["ollama", "llama_cpp", "openai_compatible", "in_process", "other"]
+        },
+        "locality": {
+          "description": "'external' providers are disabled unless an experiment explicitly grants network access.",
+          "enum": ["local", "external"]
+        },
+        "api": {
+          "type": "object",
+          "required": ["protocol"],
+          "additionalProperties": false,
+          "properties": {
+            "protocol": {
+              "enum": ["openai_chat_completions", "ollama_native", "python_callable"]
+            },
+            "base_url": { "type": "string", "pattern": "^https?://" },
+            "supports_explicit_unload": {
+              "description": "Whether the gateway can force a model out of memory.",
+              "type": "boolean"
+            }
+          }
+        },
+        "version": { "type": "string" }
+      }
+    },
+    "models": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "provider_ref", "roles", "modalities", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "Gateway-facing id, independent of the provider's naming.",
+            "$ref": "urn:open-lab:schema:common:v1#/$defs/slug"
+          },
+          "provider_ref": {
+            "description": "Name the provider itself uses, e.g. an Ollama tag.",
+            "type": "string",
+            "minLength": 1
+          },
+          "digest": { "description": "Provider-reported content digest, recorded for reproducibility.", "type": "string" },
+          "family": { "type": "string" },
+          "parameter_count": { "description": "Human-readable size such as '3B'.", "type": "string" },
+          "quantization": { "type": "string" },
+          "license": { "type": "string" },
+          "roles": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "orchestrator",
+                "text_generation",
+                "vision_language",
+                "embedding",
+                "speech_recognition",
+                "speech_synthesis",
+                "audio_understanding",
+                "image_generation",
+                "audio_generation",
+                "video_generation"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "modalities": {
+            "type": "object",
+            "required": ["input", "output"],
+            "additionalProperties": false,
+            "properties": {
+              "input": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "enum": ["text", "image", "audio", "video"] },
+                "uniqueItems": true
+              },
+              "output": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "enum": ["text", "image", "audio", "video", "embedding"] },
+                "uniqueItems": true
+              }
+            }
+          },
+          "context_window_tokens": { "type": "integer", "minimum": 1 },
+          "features": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "tool_calling": { "type": "boolean" },
+              "structured_output": { "type": "boolean" },
+              "streaming": { "type": "boolean" }
+            }
+          },
+          "footprint": {
+            "description": "Approximate memory needs, used for sequential loading decisions.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "disk_mb": { "type": "integer", "minimum": 0 },
+              "ram_mb": { "type": "integer", "minimum": 0 },
+              "vram_mb": { "type": "integer", "minimum": 0 },
+              "measured": {
+                "description": "False when the numbers are estimates rather than measurements on the target machine.",
+                "type": "boolean"
+              }
+            }
+          },
+          "status": {
+            "description": "'available': present and validated on the target machine. 'unvalidated': present but untested. 'requires_download': not present.",
+            "enum": ["available", "unvalidated", "requires_download"]
+          },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "extensions": { "$ref": "urn:open-lab:schema:common:v1#/$defs/extensions" }
+  }
+}
