@@ -48,9 +48,11 @@ What does **not** exist:
   cannot say whether it is still running or was interrupted; the Window shows
   the last recorded state and when the last event was written.
 - Only contract major version 1 is understood.
-- No real archive contains an artifact yet (the minimal world has no
-  capability that writes files), so the artifact views have only been
-  exercised on synthetic archives written by the tests.
+- The artifact list and text preview were also checked against a real scripted
+  Simulation archive in S005a (minimal world 0.4.0, `workspace.write`): relative
+  path, producer, revision, byte count and preserved text appeared correctly.
+  Archive file digests were unchanged after browsing. Real image artifacts
+  remain unverified; image previews are covered by synthetic test archives.
 
 ## Read-only, and how that is kept
 
