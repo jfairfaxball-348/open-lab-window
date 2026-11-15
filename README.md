@@ -125,3 +125,7 @@ All GET. `{e}` is the experiment id and `{r}` the run id.
 | `/api/runs/{e}/{r}/integrity` | Result of checking the event log |
 
 Development rules are in [AGENTS.md](AGENTS.md).
+
+## Licence
+
+Apache License 2.0; see [LICENSE](LICENSE).
