@@ -42,7 +42,8 @@ STATIC_FILES = {
 _SECURITY_HEADERS = {
     "Content-Security-Policy": (
         "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; "
-        "connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+        "connect-src 'self'; media-src 'self'; base-uri 'none'; form-action 'none'; "
+        "frame-ancestors 'none'"
     ),
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "no-referrer",
@@ -130,6 +131,7 @@ JSON_ROUTES: tuple[tuple[re.Pattern[str], _Route], ...] = (
     (re.compile(_RUN + r"/integrity"), _integrity),
 )
 IMAGE_ROUTE = re.compile(_RUN + r"/artifacts/(?P<artifact_id>[^/]+)/image")
+MEDIA_ROUTE = re.compile(_RUN + r"/artifacts/(?P<artifact_id>[^/]+)/media")
 
 
 class WindowHandler(BaseHTTPRequestHandler):
@@ -183,6 +185,11 @@ class WindowHandler(BaseHTTPRequestHandler):
                 self._send(HTTPStatus.OK, content_type, handle.read(), send_body=send_body)
             return
         try:
+            match = MEDIA_ROUTE.fullmatch(path)
+            if match:
+                content_type, stored = self.library.artifact_media(**match.groupdict())
+                self._stream_media(stored, content_type, send_body)
+                return
             match = IMAGE_ROUTE.fullmatch(path)
             if match:
                 media_type, stored = self.library.artifact_image(**match.groupdict())
@@ -207,6 +214,47 @@ class WindowHandler(BaseHTTPRequestHandler):
                 {"error": "The archive could not be read just now."},
                 send_body,
             )
+
+    def _stream_media(self, stored: Path, content_type: str, send_body: bool) -> None:
+        size = stored.stat().st_size
+        start, end = 0, size - 1
+        request = self.headers.get("Range")
+        if request:
+            match = re.fullmatch(r"bytes=([0-9]*)-([0-9]*)", request)
+            valid = (match and any(match.groups()) and len(request) <= 80
+                     and len(self.headers.get_all("Range", [])) == 1)
+            if valid:
+                left, right = match.groups()
+                if left:
+                    start = int(left)
+                    end = min(int(right), size - 1) if right else size - 1
+                else:
+                    suffix = int(right)
+                    start = max(size - suffix, 0)
+                    valid = suffix > 0
+            if not valid or not 0 <= start <= end < size:
+                self._send(HTTPStatus.REQUESTED_RANGE_NOT_SATISFIABLE, content_type, b"",
+                           send_body=send_body, extra={"Content-Range": f"bytes */{size}"})
+                return
+        length = end - start + 1
+        self.send_response(HTTPStatus.PARTIAL_CONTENT if request else HTTPStatus.OK)
+        headers = {**_SECURITY_HEADERS, "Content-Type": content_type,
+                   "Content-Length": str(length), "Accept-Ranges": "bytes"}
+        if request:
+            headers["Content-Range"] = f"bytes {start}-{end}/{size}"
+        for name, value in headers.items():
+            self.send_header(name, value)
+        self.end_headers()
+        if send_body:
+            with open_readonly(stored) as handle:
+                handle.seek(start)
+                remaining = length
+                while remaining:
+                    chunk = handle.read(min(64 * 1024, remaining))
+                    if not chunk:
+                        break
+                    self.wfile.write(chunk)
+                    remaining -= len(chunk)
 
     def _host_is_loopback(self) -> bool:
         host = self.headers.get("Host", "")

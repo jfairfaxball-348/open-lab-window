@@ -107,3 +107,6 @@ table.grid { border-collapse: collapse; width: 100%; background: var(--panel); b
 
 .preview img { max-width: 100%; border: 1px solid var(--line); background: repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 0 0 / 16px 16px; }
 .filetext { max-height: 600px; }
+/* Native passive-media controls need no active artifact document. */
+.preview video, .preview audio { display: block; max-width: 100%; }
+.preview video { width: min(100%, 480px); }

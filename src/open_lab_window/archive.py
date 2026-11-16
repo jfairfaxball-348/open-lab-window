@@ -27,6 +27,9 @@ from typing import Any, BinaryIO
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 
+from .media import HEADER_BYTES
+from .media import media_type as passive_media_type
+
 # The contracts' slug rule. Checking it before touching the disk also means a
 # request can never name a path outside the runs directory.
 SLUG = re.compile(r"^[a-z0-9]+(?:[._-][a-z0-9]+)*$")
@@ -492,6 +495,10 @@ class Library:
         media_type = _image_type(head)
         if media_type:
             return {"artifact": record, "kind": "image", "media_type": media_type}
+        passive = self._passive_type(stored)
+        if passive:
+            return {"artifact": record, "kind": "audio" if passive == "audio/wav" else "video",
+                    "media_type": passive}
         text = _as_text(head[:TEXT_PREVIEW_BYTES])
         if text is None:
             return {
@@ -513,6 +520,18 @@ class Library:
         if stored is None or media_type is None:
             raise NotFound("no image content for this artifact")
         return media_type, stored
+
+    def _passive_type(self, stored: Path) -> str | None:
+        if not stored.resolve().is_relative_to(self.runs_root.resolve()):
+            return None
+        return passive_media_type(_read_bytes(stored, HEADER_BYTES), stored.stat().st_size)
+
+    def artifact_media(self, experiment_id: str, run_id: str, artifact_id: str) -> tuple[str, Path]:
+        _, stored = self._artifact_file(experiment_id, run_id, artifact_id)
+        recognised = self._passive_type(stored) if stored else None
+        if not recognised:
+            raise NotFound("no supported passive media for this artifact")
+        return recognised, stored
 
     # -- integrity --------------------------------------------------------
 

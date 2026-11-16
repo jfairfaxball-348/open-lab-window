@@ -12,6 +12,15 @@ schemas and a data directory, never code.
 
 ## Status
 
+**S020b adds passive WAV/WebM playback.** Preserved PCM WAV and bounded
+VP8/VP9 WebM use native controls, without autoplay. Recognition checks container
+headers, codecs and basic resource bounds; it is not full bitstream validation.
+The browser decodes media; Window never runs a decoder/converter, writes files
+or calls Simulation. GET/HEAD supports one byte range and bounded streaming.
+Images/text remain unchanged; HTML/SVG/JavaScript artifacts are never executed.
+S020b source tests include a real procedurally generated FFmpeg clip and retain
+all read-only/isolation tests. No new inhabitant run or inference was used.
+
 **S004 (basic Window) is complete.** What exists and works:
 
 - `olw serve` — a local server on `http://127.0.0.1:8765/` over
@@ -69,7 +78,8 @@ The Window must not be able to influence a run, even by accident
   cannot contact the Simulation or a model server.
 - Archive content is agent-produced and is treated as untrusted text: it is
   never inserted as HTML, the page runs under a strict Content-Security-Policy,
-  and stored files are served only when their bytes are a raster image.
+  and stored files are served only for recognised raster or bounded PCM WAV/WebM
+  content. Active artifact documents are never served.
 
 The tests check these: a scan of the source for anything that could write or
 connect, a record of every file opened while every page is requested, a digest
@@ -122,6 +132,7 @@ All GET. `{e}` is the experiment id and `{r}` the run id.
 | `/api/runs/{e}/{r}/artifacts?offset=N&limit=N` | Artifact metadata records |
 | `/api/runs/{e}/{r}/artifacts/{id}/preview` | Text, or a note that it is an image or cannot be shown |
 | `/api/runs/{e}/{r}/artifacts/{id}/image` | The stored bytes, only if they are a raster image |
+| `/api/runs/{e}/{r}/artifacts/{id}/media` | Recognised PCM WAV/WebM, GET/HEAD and one byte range, no conversion |
 | `/api/runs/{e}/{r}/integrity` | Result of checking the event log |
 
 Development rules are in [AGENTS.md](AGENTS.md).

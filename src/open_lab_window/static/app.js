@@ -484,6 +484,9 @@ async function artifactsTab(e, r, mine) {
       if (mine !== generation) return;
       const content = p.kind === "image"
         ? h("img", { alt: `Preserved content of ${record.workspace_path}`, src: `${runPath(e, r)}/artifacts/${encodeURIComponent(record.artifact_id)}/image` })
+        : p.kind === "audio" || p.kind === "video"
+          ? h(p.kind, { controls: true, preload: "metadata",
+              src: `${runPath(e, r)}/artifacts/${encodeURIComponent(record.artifact_id)}/media` })
         : p.kind === "text"
           ? [h("pre", { class: "filetext" }, p.text || "(empty file)"), p.truncated ? h("p", { class: "muted" }, "Preview shows the first 256 KB only.") : null]
           : h("p", { class: "notice" }, p.reason);

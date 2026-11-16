@@ -44,7 +44,9 @@ What follows is only what is specific to this repository.
   arguments, file names and file contents were produced by an agent. The front
   end inserts them with `textContent` only, never as HTML; the server sends a
   strict Content-Security-Policy; artifact bytes are served only when they are
-  recognised raster images.
+  recognised raster images or bounded PCM WAV/WebM media (ADR-0027, S020b).
+  Media uses native controls without autoplay; no transcoder or active document
+  execution is allowed. GET/HEAD byte ranges never create files or call a service.
 - **Keep observed behaviour and agent claims visibly apart.** An event's
   `epistemic_status` is always shown, and `agent_claim` must stay visually
   distinct from `observed`. The Window displays the record; it does not
